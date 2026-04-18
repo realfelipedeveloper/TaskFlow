@@ -7,4 +7,7 @@ export type TaskPayloadDto = {
   doubt?: string | null;
   answer?: string | null;
   assigneeIds?: number[];
+  branch?: string;
+  projectId?: number | null;
+  files?: string;
 };

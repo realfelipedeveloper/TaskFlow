@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { Input } from '@/components/Input';
 import Link from 'next/link';
+import { hasActiveSession, setSession } from '@/lib/session';
 
 export default function LoginPage() {
   const [login, setLogin] = useState('');
@@ -13,6 +14,12 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  useEffect(() => {
+    if (hasActiveSession()) {
+      router.replace('/');
+    }
+  }, [router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -20,15 +27,9 @@ export default function LoginPage() {
 
     try {
       const res = await api.post('/auth/login', { login, password });
-
-      // 🔥 salva sessão
-      localStorage.setItem('token', res.data.access_token);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
-
-      // 🔥 navega + força re-render do layout (CRÍTICO)
+      setSession(res.data.access_token, res.data.user);
       router.push('/');
       router.refresh();
-
     } catch (err: any) {
       setError(
         err.response?.data?.message ||

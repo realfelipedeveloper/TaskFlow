@@ -76,6 +76,7 @@ error.txt
 ########################################
 # tasks-api/*.js
 # tasks-api/*.ts
+tasks-api/public/uploads
 
 ########################################
 # 🧩 PRISMA

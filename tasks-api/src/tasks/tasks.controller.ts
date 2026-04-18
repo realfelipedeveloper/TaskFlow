@@ -1,29 +1,42 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { TasksService } from './tasks.service';
-import { TaskPayloadDto } from './dto/task.dto';
+import type { TaskPayloadDto } from './dto/task.dto';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { UploadedFiles, UseInterceptors } from '@nestjs/common';
 
+@UseGuards(AuthGuard('jwt'))
 @Controller('tasks')
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
   @Get('dashboard')
-  getDashboard() {
-    return this.tasksService.getDashboard();
+  getDashboard(@Query('projectId') projectId?: string) {
+    return this.tasksService.getDashboard(projectId ? +projectId : undefined);
   }
 
   @Get()
-  findAll() {
-    return this.tasksService.findAll();
+  findAll(@Query('projectId') projectId?: string) {
+    return this.tasksService.findAll(projectId ? +projectId : undefined);
   }
 
   @Post()
-  create(@Body() createTaskDto: TaskPayloadDto) {
-    return this.tasksService.create(createTaskDto);
+  @UseInterceptors(FilesInterceptor('files'))
+  create(
+    @Body() createTaskDto: TaskPayloadDto,
+    @UploadedFiles() files: any[],
+  ) {
+    return this.tasksService.create(createTaskDto, files);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTaskDto: TaskPayloadDto) {
-    return this.tasksService.update(+id, updateTaskDto);
+  @UseInterceptors(FilesInterceptor('files'))
+  update(
+    @Param('id') id: string, 
+    @Body() updateTaskDto: TaskPayloadDto, 
+    @UploadedFiles() files?: any[]
+  ) {
+    return this.tasksService.update(+id, updateTaskDto, files);
   }
 
   @Delete(':id')

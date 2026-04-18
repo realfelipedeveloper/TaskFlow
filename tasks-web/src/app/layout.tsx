@@ -16,6 +16,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "TaskFlow - Task Management",
   description: "Advanced task management for modern teams",
+  icons: {
+    icon: "/taskflow/icon.png",
+  }
 };
 
 export default function RootLayout({

@@ -4,60 +4,60 @@ import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import api from '@/lib/api';
+import {
+  AUTH_SESSION_EVENT,
+  clearSession,
+  getSessionToken,
+  getSessionUser,
+  type SessionUser,
+  updateSessionUser,
+} from '@/lib/session';
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
   const router = useRouter();
 
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<SessionUser | null>(null);
 
   useEffect(() => {
     const syncUser = () => {
-      const storedUser = localStorage.getItem('user');
-
-      if (!storedUser) {
-        setUser(null);
-        return;
-      }
-
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch {
-        setUser(null);
-      }
+      setUser(getSessionUser());
     };
 
     syncUser();
-    window.addEventListener('storage', syncUser);
     window.addEventListener('focus', syncUser);
+    window.addEventListener(AUTH_SESSION_EVENT, syncUser);
 
     return () => {
-      window.removeEventListener('storage', syncUser);
       window.removeEventListener('focus', syncUser);
+      window.removeEventListener(AUTH_SESSION_EVENT, syncUser);
     };
   }, [pathname]);
 
   useEffect(() => {
     const refreshSession = async () => {
-      const token = localStorage.getItem('token');
+      const token = getSessionToken();
+
       if (!token) return;
 
       try {
         const res = await api.get('/users/me');
         if (res.data) {
-          localStorage.setItem('user', JSON.stringify(res.data));
+          updateSessionUser(res.data);
           setUser(res.data);
         }
       } catch (error) {
         console.error('Erro ao sincronizar sessão do usuário', error);
+        clearSession();
+        router.replace('/login');
       }
     };
 
-    refreshSession();
-  }, [pathname]);
+    void refreshSession();
+  }, [pathname, router]);
 
   const handleLogout = () => {
-    localStorage.clear();
+    clearSession();
     router.push('/login');
   };
 
@@ -80,21 +80,31 @@ export const Navbar: React.FC = () => {
 
         <div className="flex items-center gap-8">
           <Link href="/" className="text-xl font-black text-white tracking-tight">
-            TaskFlow - <span className="text-blue-500">Dashboard</span>
+            { /* TaskFlow - <span className="text-blue-500">Dashboard</span> */ }
+            <img src="/taskflow/logov3.png" alt="ABBATECH" style={{ width: 200 }} />
           </Link>
         </div>
         
         <div className="flex items-center gap-4">
 
-          {/* 🔥 Mostrar só se for admin */}
           {isAdmin && (
-            <Link
-              href="/admin/users"
-              className="px-4 py-2 rounded-xl text-sm font-bold transition-all border bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border-blue-500/20"
-              style={{ fontWeight: 700, fontSize: 14 }}
-            >
-              Gerenciar Usuários
-            </Link>
+            <>
+              <Link
+                href="/admin/projects"
+                className="px-4 py-2 rounded-xl text-sm font-bold transition-all border bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border-blue-500/20"
+                style={{ fontWeight: 700, fontSize: 14 }}
+              >
+                Gerenciar Projetos
+              </Link>
+
+              <Link
+                href="/admin/users"
+                className="px-4 py-2 rounded-xl text-sm font-bold transition-all border bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border-blue-500/20"
+                style={{ fontWeight: 700, fontSize: 14 }}
+              >
+                Gerenciar Usuários
+              </Link>
+            </>
           )}
 
           <div className="h-8 w-px bg-white/10 mx-2"></div>
