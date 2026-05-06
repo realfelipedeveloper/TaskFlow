@@ -4,12 +4,14 @@
 .env
 .env.*
 !.env.example
+!.env.dev.example
+!.env.local-prod.example
+!.env.prod.example
 
 ########################################
 # 📦 DEPENDÊNCIAS
 ########################################
 node_modules/
-nginx/
 backups_db/
 
 ########################################

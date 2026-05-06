@@ -1,0 +1,73 @@
+services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: taskflow-mysql-localprod
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-tasks}
+      MYSQL_USER: ${MYSQL_USER:-taskflow}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-taskflow}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+    ports:
+      - "${MYSQL_PORT:-3310}:3306"
+    volumes:
+      - taskflow_mysql_localprod_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root --password=$$MYSQL_ROOT_PASSWORD"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  nest-api:
+    build:
+      context: ./tasks-api
+    container_name: taskflow-api-localprod
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-mysql://taskflow:taskflow@mysql-db:3306/tasks}
+      JWT_SECRET: ${JWT_SECRET:-localprod_jwt_secret_change_me}
+      PORT: 3001
+    volumes:
+      - taskflow_api_localprod_uploads:/app/public/uploads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"const s=require('net').connect(3001,'127.0.0.1');s.on('connect',()=>{s.end();process.exit(0)});s.on('error',()=>process.exit(1));setTimeout(()=>process.exit(1),2000)\""]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  tasks-web:
+    build:
+      context: ./tasks-web
+    container_name: taskflow-web-localprod
+    depends_on:
+      nest-api:
+        condition: service_healthy
+    environment:
+      NEXT_TELEMETRY_DISABLED: "1"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"const s=require('net').connect(3000,'127.0.0.1');s.on('connect',()=>{s.end();process.exit(0)});s.on('error',()=>process.exit(1));setTimeout(()=>process.exit(1),2000)\""]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  nginx:
+    image: nginx:alpine
+    container_name: taskflow-nginx-localprod
+    depends_on:
+      tasks-web:
+        condition: service_healthy
+      nest-api:
+        condition: service_healthy
+    ports:
+      - "${HTTP_PORT:-8082}:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped
+
+volumes:
+  taskflow_mysql_localprod_data:
+  taskflow_api_localprod_uploads:
