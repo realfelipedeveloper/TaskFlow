@@ -23,6 +23,8 @@ type Task = {
   assigneeIds: number[];
   developer?: string[] | string;
   branch?: string | null;
+  commit?: string | null;
+  pr?: string | null;
   projectId?: number | null;
   project?: Project | null;
   files?: string[] | string;
@@ -48,6 +50,8 @@ export default function Dashboard() {
     due_date: '',
     assigneeIds: [] as number[],
     branch: '',
+    commit: '',
+    pr: '',
     projectId: '',
     files: [] as (File | string)[],
   });
@@ -153,6 +157,8 @@ export default function Dashboard() {
           ? task.assigneeIds.map((id: number | string) => Number(id))
           : [],
         branch: task.branch || '',
+        commit: task.commit || '',
+        pr: task.pr || '',
         projectId: task.projectId ? String(task.projectId) : '',
         files: task.files
         ? (typeof task.files === 'string'
@@ -175,6 +181,8 @@ export default function Dashboard() {
         due_date: '',
         assigneeIds: [],
         branch: '',
+        commit: '',
+        pr: '',
         projectId: '',
         files: [] as (File | string)[]
       });
@@ -605,6 +613,22 @@ export default function Dashboard() {
               required
             />
           </div>
+          <Input
+            label="Commit"
+            placeholder="Ex: abc1234 ou URL do commit"
+            className="bg-slate-800/50 border-white/5 text-white"
+            value={formData.commit}
+            onChange={(e) => setFormData({ ...formData, commit: e.target.value })}
+          />
+          <Input
+            label="PR"
+            isTextArea
+            rows={4}
+            className="bg-slate-800/50 border-white/5 text-white"
+            placeholder="Link, número ou detalhes do PR..."
+            value={formData.pr}
+            onChange={(e) => setFormData({ ...formData, pr: e.target.value })}
+          />
           <div className="space-y-1">
             <label className="block text-xs font-black text-slate-400 uppercase tracking-widest">
               Responsável

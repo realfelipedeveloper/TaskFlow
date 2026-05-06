@@ -12,6 +12,7 @@
     "start:dev": "ts-node-dev --respawn --transpile-only --poll src/main.ts",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/src/main.js",
+    "prisma:deploy": "prisma generate && node scripts/ensure-prisma-baseline.js && prisma migrate deploy",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
   },
   "dependencies": {

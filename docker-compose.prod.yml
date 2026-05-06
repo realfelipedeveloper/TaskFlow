@@ -27,6 +27,7 @@ services:
       PORT: 3001
     volumes:
       - taskflow_api_prod_uploads:/app/public/uploads
+    command: sh -c "npm run prisma:deploy && node dist/src/main.js"
     restart: unless-stopped
 
   tasks-web:

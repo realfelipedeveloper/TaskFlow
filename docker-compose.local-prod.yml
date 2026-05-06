@@ -31,6 +31,7 @@ services:
       PORT: 3001
     volumes:
       - taskflow_api_localprod_uploads:/app/public/uploads
+    command: sh -c "npm run prisma:deploy && node dist/src/main.js"
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "node -e \"const s=require('net').connect(3001,'127.0.0.1');s.on('connect',()=>{s.end();process.exit(0)});s.on('error',()=>process.exit(1));setTimeout(()=>process.exit(1),2000)\""]
