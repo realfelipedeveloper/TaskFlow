@@ -4,9 +4,8 @@
 .env
 .env.*
 !.env.example
-!.env.dev.example
 !.env.local-prod.example
-!.env.prod.example
+!.env.production.dokploy.example
 
 ########################################
 # 📦 DEPENDÊNCIAS
